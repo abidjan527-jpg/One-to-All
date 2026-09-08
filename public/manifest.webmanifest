@@ -1,0 +1,16 @@
+{
+  "name": "AI ONE-TO-ALL",
+  "short_name": "ONE-TO-ALL",
+  "description": "Ask once and compare answers from leading AI models.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#090b16",
+  "theme_color": "#090b16",
+  "categories": ["productivity", "education", "utilities"],
+  "icons": [
+    {"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.abidjan527.aionetoall",
+  "appName": "AI ONE-TO-ALL",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  }
+}

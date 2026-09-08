@@ -1,0 +1,1 @@
+window.ONE_TO_ALL_API_URL = "";
