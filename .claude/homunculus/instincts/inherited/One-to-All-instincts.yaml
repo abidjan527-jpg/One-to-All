@@ -1,0 +1,151 @@
+# Instincts generated from https://github.com/abidjan527-jpg/One-to-All
+# Generated: 2026-09-08T22:14:02.329Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: One-to-All-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, fix, docs, build, ci
+
+## Evidence
+
+- 22 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: add functional multi-model API and PWA hosting, docs: add terms of use
+
+---
+id: One-to-All-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Commit Length
+
+## Action
+
+Keep commit messages concise (~40 characters)
+
+## Evidence
+
+- Average commit message length: 40 chars
+- Based on 22 commits
+
+---
+id: One-to-All-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: One-to-All-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: One-to-All-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Export Style
+
+## Action
+
+Prefer default exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: default
+
+---
+id: One-to-All-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: One-to-All-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/abidjan527-jpg/One-to-All
+---
+
+# One To All Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~18x per month
+- Files: src/*
+
