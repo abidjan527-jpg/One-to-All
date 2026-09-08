@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090b16">
+  <meta name="description" content="Ask once. Compare leading AI answers side by side.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <title>AI ONE-TO-ALL</title>
+</head>
+<body>
+  <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="/" aria-label="AI ONE-TO-ALL home">
+        <span class="brand-mark">1→∞</span>
+        <span><strong>AI ONE‑TO‑ALL</strong><small>One prompt. Every perspective.</small></span>
+      </a>
+      <button class="new-chat" id="newChat">＋ New conversation</button>
+      <div class="history-head"><span>Recent</span><button id="clearHistory">Clear</button></div>
+      <nav class="history" id="history" aria-label="Conversation history"></nav>
+      <footer><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><span>v1.1</span></footer>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <button class="icon-button menu" id="menuButton" aria-label="Open menu">☰</button>
+        <div class="status"><i id="statusDot"></i><span id="statusText">Connecting…</span></div>
+        <button class="install" id="installButton" hidden>Install app</button>
+      </header>
+
+      <section class="hero" id="hero">
+        <div class="eyebrow">MULTI‑MODEL INTELLIGENCE</div>
+        <h1>Ask once.<br><span>See every angle.</span></h1>
+        <p>Compare answers from leading AI models in one clear, fast workspace.</p>
+        <div class="promise-grid">
+          <article><b>01</b><strong>One prompt</strong><span>Write your question once</span></article>
+          <article><b>02</b><strong>Parallel answers</strong><span>Models work together</span></article>
+          <article><b>03</b><strong>Better decisions</strong><span>Compare without switching apps</span></article>
+        </div>
+      </section>
+
+      <section class="conversation" id="conversation" aria-live="polite"></section>
+
+      <section class="composer-wrap">
+        <div class="model-row">
+          <span>Answer with</span>
+          <div id="modelPicker" class="model-picker"></div>
+        </div>
+        <form class="composer" id="composer">
+          <textarea id="prompt" rows="1" maxlength="12000" placeholder="Ask anything…" aria-label="Message"></textarea>
+          <button id="sendButton" type="submit" aria-label="Send message">➜</button>
+        </form>
+        <div class="composer-foot"><span>Enter to send · Shift+Enter for a new line</span><span id="counter">0 / 12,000</span></div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
