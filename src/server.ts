@@ -1,402 +1,250 @@
+import 'express-async-errors';
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import rateLimit from 'express-rate-limit';
-import winston from 'winston';
 
-// Load environment variables
 dotenv.config();
 
-// Initialize Express app
+type ChatRole = 'system' | 'user' | 'assistant';
+type ChatMessage = { role: ChatRole; content: string };
+type Provider = 'openai' | 'anthropic' | 'google';
+
+type ModelDefinition = {
+  id: string;
+  name: string;
+  provider: Provider;
+  configured: boolean;
+};
+
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
+const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
-// Logger configuration
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    }),
-  ],
-});
+const MODEL_DEFINITIONS: ModelDefinition[] = [
+  {
+    id: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+    name: 'OpenAI',
+    provider: 'openai',
+    configured: Boolean(process.env.OPENAI_API_KEY),
+  },
+  {
+    id: process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-latest',
+    name: 'Claude',
+    provider: 'anthropic',
+    configured: Boolean(process.env.ANTHROPIC_API_KEY),
+  },
+  {
+    id: process.env.GOOGLE_MODEL || 'gemini-2.0-flash',
+    name: 'Gemini',
+    provider: 'google',
+    configured: Boolean(process.env.GOOGLE_API_KEY),
+  },
+];
 
-// Middleware
-app.use(helmet());
-app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(','),
-  credentials: true,
+app.set('trust proxy', 1);
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(cors({
+  origin: (process.env.ALLOWED_ORIGINS || '*') === '*'
+    ? true
+    : (process.env.ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()),
+}));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use('/api', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: Number(process.env.RATE_LIMIT || 60),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+}));
+app.use(express.static(PUBLIC_DIR, { maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use('/api/', limiter);
+function getProvider(model: string): Provider | undefined {
+  return MODEL_DEFINITIONS.find((item) => item.id === model)?.provider;
+}
 
-// ============================================
-// CHATGPT INTEGRATION ENDPOINTS
-// ============================================
-
-// Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
+function validateMessages(value: unknown): value is ChatMessage[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 30) return false;
+  return value.every((message) => {
+    if (!message || typeof message !== 'object') return false;
+    const candidate = message as Partial<ChatMessage>;
+    return ['system', 'user', 'assistant'].includes(candidate.role || '')
+      && typeof candidate.content === 'string'
+      && candidate.content.trim().length > 0
+      && candidate.content.length <= 12000;
   });
-});
+}
 
-// List all available models
-app.get('/api/models', (req: Request, res: Response) => {
-  const models = {
-    llm: [
-      { id: 'gpt-4', provider: 'OpenAI', name: 'GPT-4' },
-      { id: 'gpt-3.5-turbo', provider: 'OpenAI', name: 'GPT-3.5 Turbo' },
-      { id: 'claude-3-opus', provider: 'Anthropic', name: 'Claude 3 Opus' },
-      { id: 'claude-3-sonnet', provider: 'Anthropic', name: 'Claude 3 Sonnet' },
-      { id: 'claude-3-haiku', provider: 'Anthropic', name: 'Claude 3 Haiku' },
-      { id: 'gemini-pro', provider: 'Google', name: 'Gemini Pro' },
-      { id: 'command', provider: 'Cohere', name: 'Command' },
-    ],
-    vision: [
-      { id: 'dall-e-3', provider: 'OpenAI', name: 'DALL-E 3' },
-      { id: 'gemini-pro-vision', provider: 'Google', name: 'Gemini Pro Vision' },
-    ],
-    embedding: [
-      { id: 'text-embedding-3-small', provider: 'OpenAI', name: 'Text Embedding 3 Small' },
-      { id: 'text-embedding-3-large', provider: 'OpenAI', name: 'Text Embedding 3 Large' },
-    ],
-  };
-  res.json(models);
-});
+function normalizeOpenAIMessages(messages: ChatMessage[]) {
+  return messages.map((message) => ({ role: message.role, content: message.content }));
+}
 
-// ChatGPT Chat Completions Endpoint
-app.post('/api/chat', async (req: Request, res: Response) => {
-  const requestId = uuidv4();
-  
-  try {
-    const { model, messages, temperature = 0.7, max_tokens = 2048 } = req.body;
-
-    // Validation
-    if (!model) {
-      return res.status(400).json({ error: 'Model parameter is required' });
-    }
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Messages array is required' });
-    }
-
-    logger.info(`[${requestId}] Chat request received - Model: ${model}`);
-
-    let response;
-
-    // Route to appropriate provider
-    if (model.startsWith('gpt')) {
-      response = await handleOpenAI(model, messages, temperature, max_tokens);
-    } else if (model.startsWith('claude')) {
-      response = await handleAnthropic(model, messages, temperature, max_tokens);
-    } else if (model.startsWith('gemini')) {
-      response = await handleGoogle(model, messages, temperature, max_tokens);
-    } else if (model.startsWith('command')) {
-      response = await handleCohere(model, messages, temperature, max_tokens);
-    } else {
-      return res.status(400).json({ error: `Unsupported model: ${model}` });
-    }
-
-    logger.info(`[${requestId}] Chat response generated successfully`);
-    
-    res.json({
-      id: requestId,
-      model,
-      choices: response.choices,
-      usage: response.usage,
-      created: Math.floor(Date.now() / 1000),
-    });
-  } catch (error: any) {
-    logger.error(`[${requestId}] Error processing chat request:`, error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message,
-      requestId,
-    });
-  }
-});
-
-// Text Completions Endpoint
-app.post('/api/completions', async (req: Request, res: Response) => {
-  try {
-    const { model, prompt, max_tokens = 512, temperature = 0.7 } = req.body;
-
-    if (!model || !prompt) {
-      return res.status(400).json({ error: 'Model and prompt are required' });
-    }
-
-    logger.info(`Completion request - Model: ${model}`);
-
-    // Convert prompt to messages format for consistency
-    const messages = [{ role: 'user', content: prompt }];
-    
-    let response;
-    if (model.startsWith('gpt')) {
-      response = await handleOpenAI(model, messages, temperature, max_tokens);
-    } else if (model.startsWith('claude')) {
-      response = await handleAnthropic(model, messages, temperature, max_tokens);
-    } else {
-      return res.status(400).json({ error: `Unsupported model: ${model}` });
-    }
-
-    res.json({
-      id: uuidv4(),
-      model,
-      text: response.choices[0]?.message?.content || '',
-      usage: response.usage,
-    });
-  } catch (error: any) {
-    logger.error('Error processing completion request:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Embeddings Endpoint
-app.post('/api/embeddings', async (req: Request, res: Response) => {
-  try {
-    const { input, model = 'text-embedding-3-small' } = req.body;
-
-    if (!input) {
-      return res.status(400).json({ error: 'Input is required' });
-    }
-
-    logger.info(`Embeddings request - Model: ${model}`);
-
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
-    }
-
-    const response = await axios.post('https://api.openai.com/v1/embeddings', {
-      model,
-      input: Array.isArray(input) ? input : [input],
-    }, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    res.json({
-      data: response.data.data,
-      model,
-      usage: response.data.usage,
-    });
-  } catch (error: any) {
-    logger.error('Error processing embeddings request:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================
-// PROVIDER HANDLERS
-// ============================================
-
-async function handleOpenAI(
-  model: string,
-  messages: any[],
-  temperature: number,
-  max_tokens: number
-) {
+async function callOpenAI(model: string, messages: ChatMessage[]) {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenAI API key not configured');
-  }
-
-  const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-    model,
-    messages,
-    temperature,
-    max_tokens,
-  }, {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  return {
-    choices: response.data.choices.map((choice: any) => ({
-      message: {
-        role: 'assistant',
-        content: choice.message.content,
-      },
-      finish_reason: choice.finish_reason,
-    })),
-    usage: {
-      prompt_tokens: response.data.usage.prompt_tokens,
-      completion_tokens: response.data.usage.completion_tokens,
-      total_tokens: response.data.usage.total_tokens,
-    },
-  };
-}
-
-async function handleAnthropic(
-  model: string,
-  messages: any[],
-  temperature: number,
-  max_tokens: number
-) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('Anthropic API key not configured');
-  }
-
-  const response = await axios.post('https://api.anthropic.com/v1/messages', {
-    model,
-    max_tokens,
-    temperature,
-    messages,
-  }, {
-    headers: {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
-    },
-  });
-
-  return {
-    choices: [{
-      message: {
-        role: 'assistant',
-        content: response.data.content[0].text,
-      },
-      finish_reason: response.data.stop_reason,
-    }],
-    usage: {
-      prompt_tokens: response.data.usage.input_tokens,
-      completion_tokens: response.data.usage.output_tokens,
-      total_tokens: response.data.usage.input_tokens + response.data.usage.output_tokens,
-    },
-  };
-}
-
-async function handleGoogle(
-  model: string,
-  messages: any[],
-  temperature: number,
-  max_tokens: number
-) {
-  const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('Google API key not configured');
-  }
-
-  // Convert messages to Google format
-  const contents = messages.map((msg) => ({
-    role: msg.role === 'user' ? 'user' : 'model',
-    parts: [{ text: msg.content }],
-  }));
+  if (!apiKey) throw new Error('OpenAI is not configured on the server.');
 
   const response = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    'https://api.openai.com/v1/chat/completions',
     {
-      contents,
-      generationConfig: {
-        temperature,
-        maxOutputTokens: max_tokens,
-      },
+      model,
+      messages: normalizeOpenAIMessages(messages),
+      temperature: 0.7,
+      max_tokens: 1600,
     },
     {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
+      timeout: 90000,
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    },
   );
 
-  return {
-    choices: [{
-      message: {
-        role: 'assistant',
-        content: response.data.candidates[0].content.parts[0].text,
-      },
-      finish_reason: response.data.candidates[0].finishReason,
-    }],
-    usage: {
-      prompt_tokens: 0,
-      completion_tokens: 0,
-      total_tokens: 0,
-    },
-  };
+  return response.data.choices?.[0]?.message?.content || 'No response returned.';
 }
 
-async function handleCohere(
-  model: string,
-  messages: any[],
-  temperature: number,
-  max_tokens: number
-) {
-  const apiKey = process.env.COHERE_API_KEY;
-  if (!apiKey) {
-    throw new Error('Cohere API key not configured');
+async function callAnthropic(model: string, messages: ChatMessage[]) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('Claude is not configured on the server.');
+
+  const system = messages.filter((item) => item.role === 'system').map((item) => item.content).join('\n');
+  const providerMessages = messages
+    .filter((item) => item.role !== 'system')
+    .map((item) => ({ role: item.role, content: item.content }));
+
+  const response = await axios.post(
+    'https://api.anthropic.com/v1/messages',
+    { model, system: system || undefined, messages: providerMessages, max_tokens: 1600, temperature: 0.7 },
+    {
+      timeout: 90000,
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  return response.data.content?.find((item: { type: string; text?: string }) => item.type === 'text')?.text
+    || 'No response returned.';
+}
+
+async function callGoogle(model: string, messages: ChatMessage[]) {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) throw new Error('Gemini is not configured on the server.');
+
+  const contents = messages
+    .filter((item) => item.role !== 'system')
+    .map((item) => ({
+      role: item.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: item.content }],
+    }));
+  const systemText = messages.filter((item) => item.role === 'system').map((item) => item.content).join('\n');
+
+  const response = await axios.post(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      contents,
+      systemInstruction: systemText ? { parts: [{ text: systemText }] } : undefined,
+      generationConfig: { temperature: 0.7, maxOutputTokens: 1600 },
+    },
+    {
+      timeout: 90000,
+      params: { key: apiKey },
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+
+  return response.data.candidates?.[0]?.content?.parts?.map((item: { text?: string }) => item.text || '').join('')
+    || 'No response returned.';
+}
+
+async function complete(model: string, messages: ChatMessage[]) {
+  const provider = getProvider(model);
+  if (!provider) throw new Error('Unsupported model.');
+  if (provider === 'openai') return callOpenAI(model, messages);
+  if (provider === 'anthropic') return callAnthropic(model, messages);
+  return callGoogle(model, messages);
+}
+
+app.get('/health', (_req: Request, res: Response) => {
+  res.json({
+    status: 'healthy',
+    version: '1.1.0',
+    configuredProviders: MODEL_DEFINITIONS.filter((model) => model.configured).map((model) => model.provider),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api/models', (_req: Request, res: Response) => {
+  res.json({ models: MODEL_DEFINITIONS });
+});
+
+app.post('/api/chat', async (req: Request, res: Response) => {
+  const { model, messages } = req.body as { model?: string; messages?: unknown };
+  if (!model || !getProvider(model)) {
+    return res.status(400).json({ error: 'Choose a supported model.' });
+  }
+  if (!validateMessages(messages)) {
+    return res.status(400).json({ error: 'Messages must be a non-empty valid chat history.' });
   }
 
-  // Extract the last user message as the prompt
-  const prompt = messages[messages.length - 1]?.content || '';
+  try {
+    const content = await complete(model, messages);
+    return res.json({
+      id: uuidv4(),
+      model,
+      choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }],
+      created: Math.floor(Date.now() / 1000),
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'The provider request failed.';
+    return res.status(502).json({ error: message });
+  }
+});
 
-  const response = await axios.post('https://api.cohere.ai/v1/generate', {
-    model,
-    prompt,
-    max_tokens,
-    temperature,
-  }, {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
+app.post('/api/multi-chat', async (req: Request, res: Response) => {
+  const { models, messages } = req.body as { models?: unknown; messages?: unknown };
+  if (!Array.isArray(models) || models.length === 0 || models.length > 3) {
+    return res.status(400).json({ error: 'Choose between 1 and 3 models.' });
+  }
+  if (!models.every((model) => typeof model === 'string' && getProvider(model))) {
+    return res.status(400).json({ error: 'One or more selected models are unsupported.' });
+  }
+  if (!validateMessages(messages)) {
+    return res.status(400).json({ error: 'Messages must be a non-empty valid chat history.' });
+  }
+
+  const startedAt = Date.now();
+  const results = await Promise.all(models.map(async (model) => {
+    try {
+      const content = await complete(model, messages);
+      return { model, provider: getProvider(model), ok: true, content };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'The provider request failed.';
+      return { model, provider: getProvider(model), ok: false, error: message };
+    }
+  }));
+
+  return res.json({ id: uuidv4(), results, duration_ms: Date.now() - startedAt });
+});
+
+app.get('*', (_req: Request, res: Response) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
+
+app.use((error: unknown, _req: Request, res: Response, _next: unknown) => {
+  const message = error instanceof Error ? error.message : 'Unexpected server error.';
+  res.status(500).json({ error: message });
+});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`AI ONE-TO-ALL is running on port ${PORT}`);
   });
-
-  return {
-    choices: [{
-      message: {
-        role: 'assistant',
-        content: response.data.generations[0].text,
-      },
-      finish_reason: 'stop',
-    }],
-    usage: {
-      prompt_tokens: 0,
-      completion_tokens: 0,
-      total_tokens: 0,
-    },
-  };
 }
-
-// Error handling middleware
-app.use((err: any, req: Request, res: Response) => {
-  logger.error('Unhandled error:', err);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: err.message,
-  });
-});
-
-// 404 handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({ error: 'Endpoint not found' });
-});
-
-// Start server
-app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
-  logger.info(`Health check: http://localhost:${PORT}/health`);
-  logger.info(`Available models: http://localhost:${PORT}/api/models`);
-});
 
 export default app;
