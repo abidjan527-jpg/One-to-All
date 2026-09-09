@@ -21,6 +21,11 @@
   "engines": {"node": ">=20.0.0"},
   "dependencies": {
     "@capacitor/core": "^7.4.3",
+    "@capacitor/app": "^7.4.3",
+    "@awesome-cordova-plugins/admob": "^14.0.0",
+    "@awesome-cordova-plugins/core": "^14.0.0",
+    "cordova-plugin-admob": "^4.5.0",
+    "cordova-plugin-admob-free": "^0.29.0",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
