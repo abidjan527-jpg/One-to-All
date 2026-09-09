@@ -1,0 +1,3 @@
+.native-admob-banner .composer-wrap {
+  bottom: var(--admob-height, 60px);
+}

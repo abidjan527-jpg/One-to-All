@@ -1,5 +1,5 @@
-const CACHE = 'one-to-all-v1.1.0';
-const APP_SHELL = ['/', '/styles.css', '/app.js', '/manifest.webmanifest', '/icon.svg', '/privacy.html', '/terms.html'];
+const CACHE = 'one-to-all-v1.1.1';
+const APP_SHELL = ['/', '/styles.css', '/native-ads.css', '/config.js', '/native-ads.js', '/app.js', '/manifest.webmanifest', '/icon.svg', '/privacy.html', '/terms.html'];
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL))));
 self.addEventListener('activate', (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))));
 self.addEventListener('fetch', (event) => {
