@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.DS_Store
+*.log
+
+# Android local and generated build state
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+android/captures/
+
+# Signing material must never be committed
+*.jks
+*.keystore

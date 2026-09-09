@@ -2,6 +2,9 @@ name: Android packages
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/capacitor-android-wrapper
 
 permissions:
   contents: read
@@ -28,16 +31,15 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Configure API
         if: env.APP_API_URL != ''
-        run: |
-          node -e "const fs=require('fs'); fs.writeFileSync('public/config.js', 'window.ONE_TO_ALL_API_URL = '+JSON.stringify(process.env.APP_API_URL)+';')"
+        run: npm run mobile:configure
       - name: Generate Android project
         run: |
-          npm run build
-          npx cap add android
-          npx cap sync android
+          test -d android || npx cap add android
+          npm run android:assets
+          npm run android:sync
           chmod +x android/gradlew
       - name: Build test APK
         working-directory: android

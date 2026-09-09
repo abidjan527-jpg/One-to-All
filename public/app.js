@@ -1,4 +1,5 @@
 const API_BASE=(window.ONE_TO_ALL_API_URL||'').replace(/\/$/,'');
+const IS_NATIVE=Boolean(window.Capacitor?.isNativePlatform?.());
 const state={models:[],messages:[],history:JSON.parse(localStorage.getItem('ota-history')||'[]'),activeId:null,busy:false,deferredPrompt:null};
 const $=(id)=>document.getElementById(id);
 const escapeHtml=(value)=>String(value).replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
@@ -21,5 +22,6 @@ $('clearHistory').onclick=()=>{if(confirm('Clear conversations saved on this dev
 window.addEventListener('beforeinstallprompt',(event)=>{event.preventDefault();state.deferredPrompt=event;$('installButton').hidden=false});
 $('installButton').onclick=async()=>{if(!state.deferredPrompt)return;state.deferredPrompt.prompt();await state.deferredPrompt.userChoice;state.deferredPrompt=null;$('installButton').hidden=true};
 window.addEventListener('appinstalled',()=>toast('AI ONE-TO-ALL installed.'));
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
+document.documentElement.classList.toggle('native',IS_NATIVE);
+if(!IS_NATIVE&&'serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));
 renderHistory();loadModels();resizePrompt();
