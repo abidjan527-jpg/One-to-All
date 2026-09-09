@@ -1,6 +1,6 @@
 {
   "name": "one-to-all",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "AI ONE-TO-ALL multi-model comparison PWA and Android app",
   "main": "dist/server.js",
@@ -10,10 +10,10 @@
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "check": "npm run type-check",
-    "android:add": "npx cap add android",
-    "android:sync": "npx cap sync android",
-    "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
-    "android:release": "npm run android:sync && cd android && ./gradlew assembleRelease bundleRelease"
+    "android:add": "npx cap add android && node scripts/configure-android-admob.mjs",
+    "android:sync": "npx cap sync android && node scripts/configure-android-admob.mjs",
+    "android:debug": "npm run android:sync && node scripts/write-mobile-config.mjs debug && npx cap copy android && cd android && ./gradlew assembleDebug",
+    "android:release": "npm run android:sync && node scripts/write-mobile-config.mjs release && npx cap copy android && cd android && ./gradlew assembleRelease bundleRelease"
   },
   "keywords": ["ai", "llm", "multi-model", "pwa", "android"],
   "author": "abidjan527-jpg",
@@ -21,11 +21,8 @@
   "engines": {"node": ">=20.0.0"},
   "dependencies": {
     "@capacitor/core": "^7.4.3",
-    "@capacitor/app": "^7.4.3",
-    "@awesome-cordova-plugins/admob": "^14.0.0",
-    "@awesome-cordova-plugins/core": "^14.0.0",
-    "cordova-plugin-admob": "^4.5.0",
-    "cordova-plugin-admob-free": "^0.29.0",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor-community/admob": "^7.2.0",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

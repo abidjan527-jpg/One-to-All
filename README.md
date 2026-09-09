@@ -236,6 +236,12 @@ npm run lint
 npm run format
 ```
 
+### Android and AdMob
+
+The Capacitor Android wrapper uses `@capacitor-community/admob` 7.x. Run `npm run android:add` once, then `npm run android:debug` for an installable test APK. Debug builds use Google's test app and ad-unit IDs; `npm run android:release` uses the production AI ONE-TO-ALL app ID and banner unit.
+
+Production interstitial ads require their own AdMob interstitial ad-unit ID in `ADMOB_INTERSTITIAL_ID`. The banner ID is never reused for interstitials. See `STORE_RELEASE.md` for the GitHub Actions build, signing, and `app-ads.txt` setup.
+
 ## 📊 Monitoring
 
 Access monitoring dashboards:
