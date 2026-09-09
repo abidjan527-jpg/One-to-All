@@ -196,6 +196,26 @@ print(response.choices[0].message.content)
 
 ## 🐳 Deployment
 
+### Android (Capacitor)
+
+The native Android project is included under `android/` and bundles the files in `public/` inside the app. Configure a public HTTPS backend before syncing:
+
+```bash
+npm ci
+APP_API_URL=https://api.example.com npm run mobile:configure
+npm run android:assets
+npm run android:sync
+npm run android:debug
+```
+
+Build outputs:
+
+- Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk`
+- Release APK: `android/app/build/outputs/apk/release/app-release.apk`
+- Store bundle: `android/app/build/outputs/bundle/release/app-release.aab`
+
+For CI builds, set the repository variable `APP_API_URL`, then run the **Android packages** workflow. Signing credentials belong in repository secrets; never put API keys or keystores in the app source.
+
 ### Docker Compose (Development)
 
 ```bash

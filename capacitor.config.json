@@ -2,7 +2,33 @@
   "appId": "com.abidjan527.aionetoall",
   "appName": "AI ONE-TO-ALL",
   "webDir": "public",
+  "backgroundColor": "#090b16",
   "server": {
     "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#090b16",
+    "allowMixedContent": false,
+    "loggingBehavior": "production",
+    "minWebViewVersion": 60,
+    "minHuaweiWebViewVersion": 10,
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#090b16",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#090b16"
+    }
   }
 }
