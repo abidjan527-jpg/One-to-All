@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-labelledby="title desc">
+<title id="title">AI ONE-TO-ALL launch advertisement</title>
+<desc id="desc">One prompt, multiple AI answers. Compare, create, and decide faster.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07091c"/><stop offset=".48" stop-color="#10113b"/><stop offset="1" stop-color="#052c45"/></linearGradient>
+  <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#2fe4ff"/><stop offset=".55" stop-color="#5a7cff"/><stop offset="1" stop-color="#cb45ff"/></linearGradient>
+  <linearGradient id="card" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#202755"/><stop offset="1" stop-color="#0e1431"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="18" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="shadow"><feDropShadow dx="0" dy="22" stdDeviation="30" flood-color="#000" flood-opacity=".55"/></filter>
+</defs>
+<rect width="1200" height="1500" fill="url(#bg)"/>
+<circle cx="110" cy="250" r="260" fill="#2563eb" opacity=".12"/><circle cx="1060" cy="580" r="330" fill="#a855f7" opacity=".1"/>
+<g opacity=".22" stroke="#42d9ff" fill="none"><path d="M0 470 C180 330 310 610 500 450 S840 280 1200 470"/><path d="M0 1050 C260 850 360 1160 610 970 S940 800 1200 1010"/></g>
+<g fill="#64e6ff" opacity=".55"><circle cx="130" cy="425" r="5"/><circle cx="340" cy="493" r="4"/><circle cx="817" cy="390" r="5"/><circle cx="1060" cy="425" r="4"/><circle cx="220" cy="990" r="4"/><circle cx="930" cy="932" r="5"/></g>
+<text x="600" y="142" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="86" font-weight="900" text-anchor="middle" letter-spacing="-3">AI ONE-TO-ALL</text>
+<rect x="246" y="170" width="708" height="7" rx="4" fill="url(#brand)" filter="url(#glow)"/>
+<text x="600" y="235" fill="#dce8ff" font-family="Inter,Arial,sans-serif" font-size="31" font-weight="700" text-anchor="middle" letter-spacing="3">ONE PROMPT. MULTIPLE AI ANSWERS.</text>
+<text x="600" y="286" fill="#8fa7d2" font-family="Inter,Arial,sans-serif" font-size="22" text-anchor="middle" letter-spacing="6">COMPARE • CREATE • DECIDE FASTER</text>
+<g filter="url(#shadow)">
+  <rect x="290" y="350" width="620" height="845" rx="72" fill="#050818" stroke="url(#brand)" stroke-width="6"/>
+  <rect x="325" y="392" width="550" height="755" rx="42" fill="#0b1027"/>
+  <rect x="480" y="372" width="240" height="34" rx="17" fill="#03040c"/>
+  <circle cx="600" cy="476" r="40" fill="url(#brand)" filter="url(#glow)"/>
+  <path d="M580 480 L600 455 L621 480 L600 501 Z" fill="#fff"/>
+  <text x="600" y="555" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="800" text-anchor="middle">Ask once. See every angle.</text>
+  <rect x="372" y="602" width="456" height="104" rx="26" fill="#151c42" stroke="#3fdfff" stroke-width="2"/>
+  <text x="406" y="647" fill="#91a4cf" font-family="Inter,Arial,sans-serif" font-size="18">YOUR PROMPT</text>
+  <text x="406" y="681" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="22">Create a smarter launch plan...</text>
+  <g>
+    <rect x="350" y="750" width="235" height="152" rx="28" fill="url(#card)" stroke="#39ddff" stroke-width="2"/>
+    <circle cx="391" cy="790" r="18" fill="#26d8ff"/><text x="425" y="799" fill="#fff" font-family="Arial" font-size="20" font-weight="700">AI Model A</text>
+    <rect x="385" y="833" width="150" height="10" rx="5" fill="#7d91be"/><rect x="385" y="858" width="112" height="9" rx="5" fill="#52658f"/>
+    <rect x="615" y="750" width="235" height="152" rx="28" fill="url(#card)" stroke="#9967ff" stroke-width="2"/>
+    <circle cx="656" cy="790" r="18" fill="#9c56ff"/><text x="690" y="799" fill="#fff" font-family="Arial" font-size="20" font-weight="700">AI Model B</text>
+    <rect x="650" y="833" width="150" height="10" rx="5" fill="#8d7cbd"/><rect x="650" y="858" width="125" height="9" rx="5" fill="#66568e"/>
+    <rect x="350" y="930" width="235" height="152" rx="28" fill="url(#card)" stroke="#32e0a1" stroke-width="2"/>
+    <circle cx="391" cy="970" r="18" fill="#29d99a"/><text x="425" y="979" fill="#fff" font-family="Arial" font-size="20" font-weight="700">AI Model C</text>
+    <rect x="385" y="1013" width="148" height="10" rx="5" fill="#70aeaa"/><rect x="385" y="1038" width="122" height="9" rx="5" fill="#4f807e"/>
+    <rect x="615" y="930" width="235" height="152" rx="28" fill="url(#card)" stroke="#ffb43f" stroke-width="2"/>
+    <circle cx="656" cy="970" r="18" fill="#ffac2f"/><text x="690" y="979" fill="#fff" font-family="Arial" font-size="20" font-weight="700">AI Model D</text>
+    <rect x="650" y="1013" width="150" height="10" rx="5" fill="#b99a68"/><rect x="650" y="1038" width="106" height="9" rx="5" fill="#806c4b"/>
+  </g>
+</g>
+<rect x="310" y="1263" width="580" height="116" rx="58" fill="url(#brand)" filter="url(#glow)"/>
+<text x="600" y="1335" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="44" font-weight="900" text-anchor="middle">TRY IT FREE →</text>
+<text x="600" y="1434" fill="#a9bbdb" font-family="Inter,Arial,sans-serif" font-size="24" text-anchor="middle" letter-spacing="3">27 AI MODELS • ONE UNIFIED EXPERIENCE</text>
+</svg>
