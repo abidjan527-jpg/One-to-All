@@ -49,6 +49,14 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
 app.set('trust proxy', 1);
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      scriptSrc: ["'self'", 'https://pagead2.googlesyndication.com'],
+      connectSrc: ["'self'", 'https://pagead2.googlesyndication.com', 'https://googleads.g.doubleclick.net'],
+      frameSrc: ["'self'", 'https://googleads.g.doubleclick.net', 'https://tpc.googlesyndication.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
 }));
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || '*') === '*'
